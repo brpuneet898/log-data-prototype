@@ -35,9 +35,10 @@
 
         <!-- Action Buttons -->
         <div class="my-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-            <a href="{{ url_for('download_file', filename=csv_filename) }}" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <!-- This button now triggers the JavaScript download -->
+            <button id="download-btn" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 Download Full CSV
-            </a>
+            </button>
             <a href="{{ url_for('index') }}" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 Process Another File
             </a>
@@ -61,9 +62,13 @@
                         {% for row in rows %}
                         <tr class="hover:bg-gray-50">
                             {% for cell in row %}
-                            <!-- Applied consistent borders to all cells for the grid effect -->
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-b border-r border-gray-200">
-                                {{ cell }}
+                                <!-- UPDATED: Logic to display 'null' for empty cells -->
+                                {% if cell == '' or cell is none %}
+                                    <span class="text-gray-400 italic">null</span>
+                                {% else %}
+                                    {{ cell }}
+                                {% endif %}
                             </td>
                             {% endfor %}
                         </tr>
@@ -72,8 +77,27 @@
                 </table>
             </div>
         </div>
-
     </div>
+            <script>
+        // Get the full CSV data and filename passed from the Flask template
+        const csvData = {{ full_csv_data | tojson }};
+        const csvFilename = {{ csv_filename | tojson }};
+
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', csvFilename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+
+
 
 </body>
 </html>
