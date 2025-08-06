@@ -71,7 +71,7 @@ def get_regex_from_gemini(log_sample):
     **Your Instructions:**
     1.  Create a single Python regex with named capture groups (e.g., `?P<group_name>...`).
     2.  The name of each capture group **MUST** match a key from the **Generic Log Schema** if possible. Use the following mapping rules:
-        - For a unique identifier (like a UUID, `correlation_id`, `request_id`), name the capture group `trace_id`.
+        - For a unique identifier (like a UUID, `correlation_id`, `request_id`, `tid`, `euid`), name the capture group `trace_id`.
         - For an exception or stack trace (like `exception_details`, `stack_trace`), name the capture group `error_details`.
         - For a service or application name, use `service_name`.
         - For a server or machine name, use `host_name`.
@@ -81,8 +81,12 @@ def get_regex_from_gemini(log_sample):
     6.  The regex should match the entire line from start (`^`) to end (`$`).
     7.  **Return ONLY the raw regex string and absolutely nothing else.**
 
-    **Example Output for a log like "2025-08-05 17:15:21 | WARNING | Profile updated | email-dispatcher | host-02 | a870-d0a6 | TimeoutException | ...":**
+    **Example 1: For a complex, pipe-delimited log like "2025-08-05 17:15:21 | WARNING | Profile updated | email-dispatcher | host-02 | a870-d0a6 | TimeoutException | ...":**
     ^(?P<timestamp>.*?)\\s*\\|\\s*(?P<log_level>\\w+)\\s*\\|\\s*(?P<message>.*?)\\s*\\|\\s*(?P<service_name>.*?)\\s*\\|\\s*(?P<host_name>.*?)\\s*\\|\\s*(?P<trace_id>.*?)\\s*\\|\\s*(?P<error_details>.*?)\\s*\\|\\s*(?P<json_payload>{{.*}})$
+    
+    **Example 2: For a standard log like "[Sun Dec 04 04:51:18 2005] [error] mod_jk child workerEnv in error state 6":**
+    Your output should be a regex like:
+    ^\\[(?P<timestamp>.*?)\\] \\[(?P<log_level>\\w+)\\] (?P<message>.*)$
     """    
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     headers = {'Content-Type': 'application/json'}
